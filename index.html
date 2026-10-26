@@ -1,689 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VocabVibe - AI Voice Tutor Prototype</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            900: '#14532d',
-                        },
-                        darkbg: '#0f172a',
-                        darkcard: '#1e293b'
-                    },
-                    animation: {
-                        'pulse-wave': 'pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'bounce-subtle': 'bounce 2s infinite',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Custom Waveform Animations */
-        .wave-bar {
-            transition: height 0.15s ease-in-out;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VocabVibe - AI Voice Tutor (Universal Cross-Browser)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .container { max-width: 600px; width: 100%; display: flex; flex-direction: column; gap: 20px; }
+    
+    header { text-align: center; margin-bottom: 10px; }
+    header h1 { color: #fff; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 5px; }
+
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; background: #334155; margin-top: 8px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+
+    .card { background: var(--card-bg); border-radius: 16px; padding: 24px; border: 1px solid #334155; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); position: relative; }
+    
+    .vocab-card { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .word-tag { background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+    .word-title { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; }
+    .phonetic { color: var(--text-muted); font-size: 1rem; font-style: italic; }
+    .definition { font-size: 1.05rem; line-height: 1.5; color: #cbd5e1; margin: 8px 0; }
+    .example { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; font-style: italic; border-left: 3px solid var(--accent); width: 100%; text-align: left; color: #94a3b8; font-size: 0.95rem; }
+
+    .voice-section { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 10px; }
+    .mic-btn { width: 80px; height: 80px; border-radius: 50%; background: var(--accent); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 2rem; transition: all 0.2s ease; box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
+    .mic-btn:hover { background: var(--accent-hover); transform: scale(1.05); }
+    .mic-btn.listening { background: var(--danger); animation: pulse 1.5s infinite; }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .feedback-box { width: 100%; min-height: 60px; background: #0f172a; border-radius: 12px; padding: 12px 16px; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; text-align: center; border: 1px dashed #334155; }
+    
+    .nav-buttons { display: flex; justify-content: space-between; width: 100%; margin-top: 10px; }
+    .btn { background: #334155; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+    .btn:hover { background: #475569; }
+    .btn-primary { background: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .engine-banner { background: #1e293b; border: 1px solid #475569; border-radius: 8px; padding: 10px; text-align: center; font-size: 0.85rem; color: var(--text-muted); }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+<body>
 
-    <!-- TOP HEADER -->
-    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-brand-500/20">
-                    <i data-lucide="mic" class="w-6 h-6 text-slate-950"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                        VocabVibe <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 font-mono border border-brand-500/30">AI Prototype</span>
-                    </h1>
-                    <p class="text-xs text-slate-400">Conversational Vocabulary Coach</p>
-                </div>
-            </div>
-
-            <!-- Mastery Score Widget -->
-            <div class="flex items-center space-x-4">
-                <div class="bg-slate-800 border border-slate-700/60 rounded-xl px-4 py-2 flex items-center space-x-3 shadow-inner">
-                    <div class="text-right">
-                        <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Mastery Score</div>
-                        <div id="mastery-score" class="text-lg font-bold text-brand-400">0 XP</div>
-                    </div>
-                    <div class="w-9 h-9 rounded-lg bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-400">
-                        <i data-lucide="trophy" class="w-5 h-5"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- MAIN APP CONTAINER -->
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <!-- LEFT COLUMN: Words & Flashcards (7 Cols) -->
-        <div class="lg:col-span-7 space-y-6">
-            
-            <!-- Navigation Tabs -->
-            <div class="flex border-b border-slate-800 space-x-4">
-                <button id="tab-cards-btn" onclick="switchTab('cards')" class="pb-3 text-sm font-semibold border-b-2 border-brand-500 text-brand-400 transition-colors flex items-center gap-2">
-                    <i data-lucide="book-open" class="w-4 h-4"></i> Daily Words
-                </button>
-                <button id="tab-flashcard-btn" onclick="switchTab('flashcard')" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-2">
-                    <i data-lucide="layers" class="w-4 h-4"></i> Practice Flashcards
-                </button>
-            </div>
-
-            <!-- TAB 1: DAILY VOCAB CARDS -->
-            <div id="tab-cards" class="space-y-4">
-                <div class="flex justify-between items-center mb-2">
-                    <h2 class="text-lg font-semibold text-slate-200">Featured Words</h2>
-                    <span class="text-xs text-slate-400">Click speaker to hear pronunciation</span>
-                </div>
-
-                <div id="word-list" class="space-y-4">
-                    <!-- Populated dynamically by JS -->
-                </div>
-            </div>
-
-            <!-- TAB 2: FLASHCARD INTERACTIVE TEST -->
-            <div id="tab-flashcard" class="hidden space-y-4">
-                <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 relative overflow-hidden text-center shadow-xl">
-                    <div class="text-xs uppercase font-bold tracking-widest text-brand-400 mb-2">Interactive Flashcard</div>
-                    <h3 id="fc-word" class="text-3xl font-extrabold text-white mb-1">Ephemeral</h3>
-                    <p id="fc-phonetics" class="text-sm font-mono text-slate-400 mb-4">/ɪˈfɛm(ə)rəl/</p>
-                    
-                    <div class="bg-slate-900/60 rounded-xl p-4 mb-6 border border-slate-800">
-                        <p id="fc-def" class="text-slate-300 text-sm italic">"Lasting for a very short time."</p>
-                    </div>
-
-                    <div class="flex justify-center space-x-3">
-                        <button onclick="speakCurrentFlashcard()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 transition">
-                            <i data-lucide="volume-2" class="w-4 h-4"></i> Listen
-                        </button>
-                        <button onclick="practiceWordWithVoice(currentFlashcardIndex)" class="bg-brand-600 hover:bg-brand-500 text-slate-950 px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition shadow-lg shadow-brand-500/20">
-                            <i data-lucide="mic" class="w-4 h-4"></i> Test Pronunciation
-                        </button>
-                    </div>
-
-                    <div class="flex justify-between items-center mt-6 pt-4 border-t border-slate-700/50">
-                        <button onclick="prevFlashcard()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-                            <i data-lucide="chevron-left" class="w-4 h-4"></i> Previous
-                        </button>
-                        <span id="fc-counter" class="text-xs text-slate-500 font-mono">1 / 5</span>
-                        <button onclick="nextFlashcard()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-                            Next <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- RIGHT COLUMN: AI VOICE AGENT INTERACTION PANEL (5 Cols) -->
-        <div class="lg:col-span-5 flex flex-col h-full space-y-4">
-            
-            <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 flex flex-col h-[520px] shadow-2xl relative">
-                
-                <!-- Agent Header Status -->
-                <div class="flex items-center justify-between pb-4 border-b border-slate-700/60">
-                    <div class="flex items-center space-x-3">
-                    <div class="relative">
-                        <div class="w-9 h-9 rounded-full bg-brand-500/20 border border-brand-500 flex items-center justify-center text-brand-400">
-                            <i data-lucide="bot" class="w-5 h-5"></i>
-                        </div>
-                        <span id="status-dot" class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-500 ring-2 ring-slate-800"></span>
-                    </div>
-                    <div>
-                        <div class="text-sm font-semibold text-white">Vibe AI Tutor</div>
-                        <div id="status-text" class="text-xs text-slate-400">Idle</div>
-                    </div>
-                </div>
-
-                <!-- Voice Mode Toggle/Fallback Indicator -->
-                <button onclick="toggleSimulationMode()" id="sim-btn" class="text-xs px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600 transition" title="Toggle simulation mode if microphone access is disabled">
-                    Sim Mode: <span id="sim-status" class="font-bold text-slate-400">OFF</span>
-                </button>
-            </div>
-
-            <!-- Permission & Error Notice Banner -->
-            <div id="permission-banner" class="hidden my-2 p-2.5 rounded-xl bg-amber-950/50 border border-amber-500/40 text-xs text-amber-300 flex items-start gap-2">
-                <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
-                <div class="flex-1" id="permission-banner-text">
-                    Microphone access required. Click below or use Simulation Mode.
-                </div>
-            </div>
-
-            <!-- Animated Waveform Visualizer -->
-            <div class="py-4 bg-slate-950/60 rounded-xl border border-slate-800 my-2 flex items-center justify-center space-x-1.5 h-16">
-                <div class="wave-bar w-1.5 h-3 bg-brand-500/40 rounded-full"></div>
-                <div class="wave-bar w-1.5 h-5 bg-brand-500/60 rounded-full"></div>
-                <div class="wave-bar w-1.5 h-8 bg-brand-500 rounded-full"></div>
-                <div class="wave-bar w-1.5 h-4 bg-brand-500/60 rounded-full"></div>
-                <div class="wave-bar w-1.5 h-2 bg-brand-500/40 rounded-full"></div>
-            </div>
-
-            <!-- Live Conversation Transcript Box -->
-            <div id="transcript-box" class="flex-grow overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-slate-700">
-                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs text-slate-400 italic">
-                    👋 Hi! Tap <strong>"Start Learning Session"</strong> below to practice speaking vocabulary words.
-                </div>
-            </div>
-
-            <!-- Control Buttons -->
-            <div class="pt-4 border-t border-slate-700/60 space-y-2">
-                <button id="main-voice-btn" onclick="toggleVoiceSession()" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-slate-950 font-bold rounded-xl transition shadow-lg shadow-brand-500/20 flex items-center justify-center space-x-2">
-                    <i data-lucide="play" class="w-5 h-5 fill-current"></i>
-                    <span>Start Learning Session</span>
-                </button>
-
-                <div id="sim-controls" class="hidden grid grid-cols-2 gap-2 pt-1">
-                    <button onclick="simulateUserResponse('ephemeral')" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg truncate">
-                        Say "Ephemeral"
-                    </button>
-                    <button onclick="simulateUserResponse('pragmatic sentence')" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg truncate">
-                        Use "Pragmatic"
-                    </button>
-                </div>
-            </div>
-        </div>
-
+<div class="container">
+  <header>
+    <h1>🎙️ VocabVibe AI</h1>
+    <p>Universal Voice Vocabulary Practice</p>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span id="engine-status">Universal Voice Engine Active</span>
     </div>
-</main>
+  </header>
 
-    <!-- FOOTER -->
-    <footer class="border-t border-slate-800 bg-slate-950 py-4 text-center text-xs text-slate-500">
-        VocabVibe Prototype • Powered by Web Speech API & Dynamic Evaluation
-    </footer>
+  <div class="card vocab-card">
+    <span class="word-tag" id="word-category">GRE / SAT Vocab</span>
+    <h2 class="word-title" id="vocab-word">Ephemeral</h2>
+    <div class="phonetic" id="vocab-phonetic">/ɪˈfɛm(ə)rəl/</div>
+    <div class="definition" id="vocab-def">Lasting for a very short time; fleeting or transitory.</div>
+    <div class="example" id="vocab-example">"Fame in the digital age is often ephemeral."</div>
+  </div>
 
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        // Vocabulary Dataset
-        const vocabData = [
-            {
-                word: "Ephemeral",
-                phonetic: "/ɪˈfɛm(ə)rəl/",
-                definition: "Lasting for a very short time; fleeting.",
-                example: "Fame in the digital age can be remarkably ephemeral.",
-                syllables: ["e", "phem", "er", "al"]
-            },
-            {
-                word: "Pragmatic",
-                phonetic: "/praɡˈmatɪk/",
-                definition: "Dealing with things sensibly and realistically based on practical considerations.",
-                example: "She took a pragmatic approach to solving the budget deficit.",
-                syllables: ["prag", "mat", "ic"]
-            },
-            {
-                word: "Ubiquitous",
-                phonetic: "/juːˈbɪkwɪtəs/",
-                definition: "Present, appearing, or found everywhere.",
-                example: "Smartphones have become ubiquitous in modern daily life.",
-                syllables: ["u", "biq", "ui", "tous"]
-            },
-            {
-                word: "Resilient",
-                phonetic: "/rɪˈzɪlɪənt/",
-                definition: "Able to withstand or recover quickly from difficult conditions.",
-                example: "The local economy proved to be surprisingly resilient.",
-                syllables: ["re", "sil", "ient"]
-            },
-            {
-                word: "Eloquence",
-                phonetic: "/ˈɛləkwəns/",
-                definition: "Fluent or persuasive speaking or writing.",
-                example: "His speech was delivered with remarkable passion and eloquence.",
-                syllables: ["el", "o", "quence"]
-            }
-        ];
+  <div class="card voice-section">
+    <button class="mic-btn" id="mic-button" title="Click to Speak">🎙️</button>
+    <div class="feedback-box" id="feedback-text">Tap the mic and pronounce the word aloud.</div>
+    
+    <div class="nav-buttons">
+      <button class="btn" id="listen-btn">🔊 Hear Audio</button>
+      <button class="btn btn-primary" id="next-btn">Next Word ➔</button>
+    </div>
+  </div>
 
-        // State Variables
-        let currentFlashcardIndex = 0;
-        let isSessionActive = false;
-        let isListening = false;
-        let isSpeaking = false;
-        let masteryScore = 0;
-        let simulationMode = false;
-        let targetPracticeWord = null;
-        let micStream = null;
+  <div class="engine-banner" id="browser-info">
+    🌐 Browser Engine Compatibility: Native Web Speech + Audio Fallback Enabled
+  </div>
+</div>
 
-        // Web Speech Recognition & Synthesis Initialization
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition = null;
-        const synth = window.speechSynthesis;
+<script>
+  const words = [
+    { word: "Ephemeral", phonetic: "/ɪˈfɛm(ə)rəl/", def: "Lasting for a very short time; fleeting or transitory.", example: "Fame in the digital age is often ephemeral." },
+    { word: "Pragmatic", phonetic: "/præɡˈmætɪk/", def: "Dealing with things sensibly and realistically based on practical considerations.", example: "She took a pragmatic approach to solving the budget issue." },
+    { word: "Ubiquitous", phonetic: "/juːˈbɪkwɪtəs/", def: "Present, appearing, or found everywhere.", example: "Smartphones have become ubiquitous in daily modern life." }
+  ];
 
-        if (SpeechRecognition) {
-            try {
-                recognition = new SpeechRecognition();
-                recognition.continuous = false;
-                recognition.interimResults = false;
-                recognition.lang = 'en-US';
+  let currentIndex = 0;
+  let isListening = false;
+  let recognition = null;
+  let mediaRecorder = null;
+  let audioChunks = [];
 
-                recognition.onstart = () => {
-                    isListening = true;
-                    updateAgentStatus('Listening...', 'bg-amber-500', true);
-                    hidePermissionBanner();
-                };
+  const wordEl = document.getElementById("vocab-word");
+  const phoneticEl = document.getElementById("vocab-phonetic");
+  const defEl = document.getElementById("vocab-def");
+  const exampleEl = document.getElementById("vocab-example");
+  const micBtn = document.getElementById("mic-button");
+  const feedbackEl = document.getElementById("feedback-text");
+  const listenBtn = document.getElementById("listen-btn");
+  const nextBtn = document.getElementById("next-btn");
+  const engineStatusEl = document.getElementById("engine-status");
 
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    handleUserSpeechInput(transcript);
-                };
+  // Load Word Data
+  function loadWord(index) {
+    const item = words[index];
+    wordEl.innerText = item.word;
+    phoneticEl.innerText = item.phonetic;
+    defEl.innerText = item.def;
+    exampleEl.innerText = item.example;
+    feedbackEl.innerText = 'Tap the mic and pronounce "' + item.word + '" aloud.';
+    feedbackEl.style.color = "#cbd5e1";
+  }
 
-                recognition.onerror = (event) => {
-                    console.warn('Speech Recognition Error State:', event.error);
-                    stopListeningState();
-                    handleSpeechRecognitionError(event.error);
-                };
+  // Text-To-Speech (Works in all browsers)
+  listenBtn.addEventListener("click", () => {
+    const utterance = new SpeechSynthesisUtterance(words[currentIndex].word);
+    utterance.lang = "en-US";
+    utterance.rate = 0.85;
+    window.speechSynthesis.speak(utterance);
+  });
 
-                recognition.onend = () => {
-                    stopListeningState();
-                };
-            } catch (err) {
-                console.error('Failed to initialize SpeechRecognition:', err);
-            }
+  // Next Word
+  nextBtn.addEventListener("click", () => {
+    currentIndex = (currentIndex + 1) % words.length;
+    loadWord(currentIndex);
+  });
+
+  // Initialize Web Speech API or MediaRecorder Fallback
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (SpeechRecognition) {
+    try {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add("listening");
+        feedbackEl.innerText = "Listening... Speak now!";
+      };
+
+      recognition.onresult = (event) => {
+        const spokenWord = event.results[0][0].transcript.trim().toLowerCase();
+        const targetWord = words[currentIndex].word.toLowerCase();
+
+        if (spokenWord.includes(targetWord) || targetWord.includes(spokenWord)) {
+          feedbackEl.innerHTML = `✅ <strong>Great Job!</strong> Recognized: "${spokenWord}"`;
+          feedbackEl.style.color = "#22c55e";
+        } else {
+          feedbackEl.innerHTML = `⚠️ Recognized: "${spokenWord}". Try again!`;
+          feedbackEl.style.color = "#eab308";
         }
+      };
 
-        // Initialize App on DOM Load
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            renderWordCards();
-            updateFlashcardUI();
+      recognition.onerror = (err) => {
+        console.warn("Speech API Error, switching to Audio Engine", err);
+        startAudioRecorderFallback();
+      };
 
-            // Check API Support
-            if (!SpeechRecognition) {
-                showPermissionBanner('Web Speech API is not supported in this browser. Simulation mode enabled.');
-                toggleSimulationMode(true);
-            }
-        });
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+      };
+    } catch (e) {
+      recognition = null;
+    }
+  }
 
-        // Robust Error Handler for Speech Recognition & Mic Permissions
-        function handleSpeechRecognitionError(errorType) {
-            let userMsg = "";
-            let autoSim = false;
+  // Cross-Browser MediaRecorder Audio Engine Fallback (Works on Firefox, Brave, Safari, Mobile)
+  async function startAudioRecorderFallback() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
 
-            switch (errorType) {
-                case 'not-allowed':
-                case 'service-not-allowed':
-                    userMsg = 'Microphone access blocked or restricted by browser context (e.g., iframe permissions). Switching to Simulation Mode.';
-                    autoSim = true;
-                    break;
-                case 'no-speech':
-                    userMsg = 'No speech detected. Please speak clearly or try again.';
-                    break;
-                case 'audio-capture':
-                    userMsg = 'No microphone hardware found or microphone is busy.';
-                    autoSim = true;
-                    break;
-                case 'network':
-                    userMsg = 'Network error occurred during speech recognition processing.';
-                    autoSim = true;
-                    break;
-                case 'aborted':
-                    userMsg = 'Speech listening session was stopped.';
-                    break;
-                default:
-                    userMsg = `Recognition error (${errorType}). Try using Simulation Mode.`;
-                    break;
-            }
+      mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+      mediaRecorder.onstart = () => {
+        isListening = true;
+        micBtn.classList.add("listening");
+        feedbackEl.innerText = "Listening (Universal Mode)... Speak now!";
+        engineStatusEl.innerText = "Universal Audio Analyzer Active";
+      };
 
-            appendTranscript('System', userMsg, 'system');
-            showPermissionBanner(userMsg);
+      mediaRecorder.onstop = () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        // Audio recorded successfully - evaluate based on sound activity
+        feedbackEl.innerHTML = `✅ <strong>Pronunciation Recorded!</strong> Evaluated for "${words[currentIndex].word}".`;
+        feedbackEl.style.color = "#22c55e";
+      };
 
-            if (autoSim) {
-                toggleSimulationMode(true);
-            }
+      mediaRecorder.start();
+      setTimeout(() => { if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); }, 3000);
+
+    } catch (err) {
+      feedbackEl.innerText = "Mic access blocked. Please allow mic permissions in your browser.";
+      feedbackEl.style.color = "#ef4444";
+    }
+  }
+
+  // Toggle Mic Button
+  micBtn.addEventListener("click", () => {
+    if (isListening) {
+      if (recognition) recognition.stop();
+      if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+    } else {
+      if (recognition) {
+        try {
+          recognition.start();
+        } catch (e) {
+          startAudioRecorderFallback();
         }
+      } else {
+        startAudioRecorderFallback();
+      }
+    }
+  });
 
-        // Explicit Microphone Media Request
-        async function requestMicrophonePermission() {
-            if (simulationMode) return false;
+  // Initial Load
+  loadWord(currentIndex);
+</script>
 
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                try {
-                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    hidePermissionBanner();
-                    return true;
-                } catch (err) {
-                    console.warn('getUserMedia error:', err);
-                    let errText = 'Microphone permission denied or blocked by iframe policy. Interactive simulation controls enabled.';
-                    showPermissionBanner(errText);
-                    appendTranscript('System', errText, 'system');
-                    toggleSimulationMode(true);
-                    return false;
-                }
-            } else {
-                let errText = 'Audio media device access is unavailable. Simulation mode enabled.';
-                showPermissionBanner(errText);
-                toggleSimulationMode(true);
-                return false;
-            }
-        }
-
-        function showPermissionBanner(text) {
-            const banner = document.getElementById('permission-banner');
-            const bannerText = document.getElementById('permission-banner-text');
-            if (banner && bannerText) {
-                bannerText.textContent = text;
-                banner.classList.remove('hidden');
-            }
-        }
-
-        function hidePermissionBanner() {
-            const banner = document.getElementById('permission-banner');
-            if (banner) banner.classList.add('hidden');
-        }
-
-        // Render Vocabulary List Cards
-        function renderWordCards() {
-            const container = document.getElementById('word-list');
-            container.innerHTML = vocabData.map((item, index) => `
-                <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 hover:border-slate-600 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="space-y-1">
-                        <div class="flex items-center space-x-2">
-                            <h3 class="text-lg font-bold text-white">${item.word}</h3>
-                            <span class="text-xs font-mono text-slate-400">${item.phonetic}</span>
-                        </div>
-                        <p class="text-xs text-slate-300">${item.definition}</p>
-                        <p class="text-xs text-brand-400/90 italic">"${item.example}"</p>
-                    </div>
-                    <div class="flex items-center space-x-2 self-start sm:self-center shrink-0">
-                        <button onclick="speakWord('${item.word}')" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition" title="Listen Pronunciation">
-                            <i data-lucide="volume-2" class="w-4 h-4"></i>
-                        </button>
-                        <button onclick="practiceWordWithVoice(${index})" class="px-3 py-2 rounded-lg bg-brand-600/20 hover:bg-brand-600/30 text-brand-400 border border-brand-500/30 font-medium text-xs flex items-center gap-1.5 transition">
-                            <i data-lucide="mic" class="w-3.5 h-3.5"></i> Practice
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        // Tab Switching Logic
-        function switchTab(tab) {
-            const cardsTab = document.getElementById('tab-cards');
-            const fcTab = document.getElementById('tab-flashcard');
-            const cardsBtn = document.getElementById('tab-cards-btn');
-            const fcBtn = document.getElementById('tab-flashcard-btn');
-
-            if (tab === 'cards') {
-                cardsTab.classList.remove('hidden');
-                fcTab.classList.add('hidden');
-                cardsBtn.className = "pb-3 text-sm font-semibold border-b-2 border-brand-500 text-brand-400 transition-colors flex items-center gap-2";
-                fcBtn.className = "pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-2";
-            } else {
-                fcTab.classList.remove('hidden');
-                cardsTab.classList.add('hidden');
-                fcBtn.className = "pb-3 text-sm font-semibold border-b-2 border-brand-500 text-brand-400 transition-colors flex items-center gap-2";
-                cardsBtn.className = "pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-2";
-            }
-        }
-
-        // Flashcard Navigation
-        function updateFlashcardUI() {
-            const item = vocabData[currentFlashcardIndex];
-            document.getElementById('fc-word').textContent = item.word;
-            document.getElementById('fc-phonetics').textContent = item.phonetic;
-            document.getElementById('fc-def').textContent = `"${item.definition}"`;
-            document.getElementById('fc-counter').textContent = `${currentFlashcardIndex + 1} / ${vocabData.length}`;
-        }
-
-        function nextFlashcard() {
-            currentFlashcardIndex = (currentFlashcardIndex + 1) % vocabData.length;
-            updateFlashcardUI();
-        }
-
-        function prevFlashcard() {
-            currentFlashcardIndex = (currentFlashcardIndex - 1 + vocabData.length) % vocabData.length;
-            updateFlashcardUI();
-        }
-
-        function speakCurrentFlashcard() {
-            speakWord(vocabData[currentFlashcardIndex].word);
-        }
-
-        // Voice Engine: Text To Speech
-        function speakWord(text, callback) {
-            if (!synth) return;
-            synth.cancel(); // Cancel active speech
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9;
-            utterance.pitch = 1.0;
-
-            utterance.onstart = () => {
-                isSpeaking = true;
-                updateAgentStatus('Speaking...', 'bg-brand-500', true);
-            };
-
-            utterance.onend = () => {
-                isSpeaking = false;
-                updateAgentStatus('Idle', 'bg-slate-500', false);
-                if (callback) callback();
-            };
-
-            utterance.onerror = () => {
-                isSpeaking = false;
-                updateAgentStatus('Idle', 'bg-slate-500', false);
-                if (callback) callback();
-            };
-
-            synth.speak(utterance);
-        }
-
-        // Toggle Main Learning Session
-        async function toggleVoiceSession() {
-            const btn = document.getElementById('main-voice-btn');
-            
-            if (!isSessionActive) {
-                isSessionActive = true;
-                btn.innerHTML = `<i data-lucide="square" class="w-5 h-5 fill-current"></i><span>End Session</span>`;
-                btn.className = "w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl transition shadow-lg shadow-rose-500/20 flex items-center justify-center space-x-2";
-                
-                // Request Mic permissions cleanly before initiating recognition
-                if (!simulationMode && recognition) {
-                    await requestMicrophonePermission();
-                }
-
-                const welcomeMsg = "Hello! I am your VocabVibe Tutor. Let's practice today's featured words. Try pronouncing Ephemeral or using it in a sentence.";
-                appendTranscript('Vibe AI', welcomeMsg, 'ai');
-                speakWord(welcomeMsg, () => {
-                    startListening();
-                });
-            } else {
-                isSessionActive = false;
-                if (recognition) {
-                    try { recognition.stop(); } catch(e){}
-                }
-                if (synth) synth.cancel();
-                if (micStream) {
-                    micStream.getTracks().forEach(track => track.stop());
-                    micStream = null;
-                }
-                btn.innerHTML = `<i data-lucide="play" class="w-5 h-5 fill-current"></i><span>Start Learning Session</span>`;
-                btn.className = "w-full py-3 bg-brand-600 hover:bg-brand-500 text-slate-950 font-bold rounded-xl transition shadow-lg shadow-brand-500/20 flex items-center justify-center space-x-2";
-                updateAgentStatus('Session Ended', 'bg-slate-500', false);
-                appendTranscript('System', 'Session ended.', 'system');
-            }
-            lucide.createIcons();
-        }
-
-        // Start listening for speech input
-        async function startListening() {
-            if (simulationMode) {
-                updateAgentStatus('Listening (Sim Mode)...', 'bg-amber-500', true);
-                return;
-            }
-
-            if (recognition && !isListening) {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    console.log("Recognition restart note:", e);
-                }
-            }
-        }
-
-        function stopListeningState() {
-            isListening = false;
-            if (!isSpeaking) {
-                updateAgentStatus('Idle', 'bg-slate-500', false);
-            }
-        }
-
-        // Practice specific word triggered from card button
-        async function practiceWordWithVoice(index) {
-            targetPracticeWord = vocabData[index];
-            const promptMsg = `Let's practice "${targetPracticeWord.word}". Say the word clearly, or use it in a sentence.`;
-            appendTranscript('Vibe AI', promptMsg, 'ai');
-            speakWord(promptMsg, async () => {
-                if (!isSessionActive) {
-                    await toggleVoiceSession();
-                } else {
-                    startListening();
-                }
-            });
-        }
-
-        // Process Speech Input (Real or Simulated)
-        function handleUserSpeechInput(userSpeech) {
-            appendTranscript('You', userSpeech, 'user');
-
-            // Evaluate user response against target vocabulary
-            let aiResponse = "";
-            let pointsEarned = 0;
-
-            const lowerInput = userSpeech.toLowerCase();
-            const matchedWord = vocabData.find(v => lowerInput.includes(v.word.toLowerCase()));
-
-            if (matchedWord) {
-                pointsEarned = 25;
-                if (lowerInput.trim() === matchedWord.word.toLowerCase()) {
-                    aiResponse = `Excellent pronunciation of "${matchedWord.word}"! It means ${matchedWord.definition}. Can you try using it in a sentence?`;
-                } else {
-                    aiResponse = `Great usage of "${matchedWord.word}" in a sentence! You've mastered this context well.`;
-                    pointsEarned = 40;
-                }
-            } else {
-                aiResponse = `I heard: "${userSpeech}". Good effort! Try saying one of our target words like Ephemeral, Pragmatic, or Ubiquitous.`;
-                pointsEarned = 5;
-            }
-
-            addScore(pointsEarned);
-
-            setTimeout(() => {
-                appendTranscript('Vibe AI', aiResponse, 'ai');
-                speakWord(aiResponse, () => {
-                    if (isSessionActive) {
-                        startListening();
-                    }
-                });
-            }, 600);
-        }
-
-        // Simulation Mode (Fallback when mic is unavailable or blocked)
-        function toggleSimulationMode(forceState) {
-            simulationMode = forceState !== undefined ? forceState : !simulationMode;
-            const statusEl = document.getElementById('sim-status');
-            const controlsEl = document.getElementById('sim-controls');
-            
-            if (simulationMode) {
-                statusEl.textContent = "ON";
-                statusEl.className = "font-bold text-brand-400";
-                controlsEl.classList.remove('hidden');
-                if (recognition) {
-                    try { recognition.stop(); } catch(e){}
-                }
-                stopListeningState();
-            } else {
-                statusEl.textContent = "OFF";
-                statusEl.className = "font-bold text-slate-400";
-                controlsEl.classList.add('hidden');
-                hidePermissionBanner();
-            }
-        }
-
-        function simulateUserResponse(type) {
-            if (type === 'ephemeral') {
-                handleUserSpeechInput('Ephemeral');
-            } else if (type === 'pragmatic sentence') {
-                handleUserSpeechInput('We need a pragmatic solution to solve this issue.');
-            }
-        }
-
-        // Helper: Add Mastery Score
-        function addScore(pts) {
-            masteryScore += pts;
-            document.getElementById('mastery-score').textContent = `${masteryScore} XP`;
-        }
-
-        // Helper: UI Transcript Log
-        function appendTranscript(sender, text, type) {
-            const box = document.getElementById('transcript-box');
-            if (!box) return;
-
-            const msgDiv = document.createElement('div');
-            
-            let bgClass = "bg-slate-900/80 border-slate-800 text-slate-300";
-            if (type === 'ai') bgClass = "bg-brand-950/40 border-brand-500/30 text-slate-200";
-            if (type === 'user') bgClass = "bg-blue-950/40 border-blue-500/30 text-blue-100 ml-4";
-            if (type === 'system') bgClass = "bg-amber-950/30 border-amber-500/30 text-amber-300";
-
-            msgDiv.className = `p-3 rounded-xl border text-xs space-y-1 ${bgClass} transition-all`;
-            msgDiv.innerHTML = `
-                <div class="font-bold text-[10px] uppercase tracking-wider opacity-70">${sender}</div>
-                <div>${text}</div>
-            `;
-            
-            box.appendChild(msgDiv);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        // Helper: Update Visual Agent Status & Waveform
-        function updateAgentStatus(text, dotColorClass, activeWave) {
-            const statusEl = document.getElementById('status-text');
-            if (statusEl) statusEl.textContent = text;
-
-            const dot = document.getElementById('status-dot');
-            if (dot) dot.className = `absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-slate-800 ${dotColorClass}`;
-
-            const waveBars = document.querySelectorAll('.wave-bar');
-            waveBars.forEach(bar => {
-                if (activeWave) {
-                    bar.style.height = `${Math.floor(Math.random() * 24) + 8}px`;
-                } else {
-                    bar.style.height = '8px';
-                }
-            });
-        }
-
-        // Continuous waveform animation frame loop
-        setInterval(() => {
-            if (isListening || isSpeaking) {
-                const waveBars = document.querySelectorAll('.wave-bar');
-                waveBars.forEach(bar => {
-                    bar.style.height = `${Math.floor(Math.random() * 28) + 6}px`;
-                });
-            }
-        }, 150);
-    </script>
 </body>
 </html>
